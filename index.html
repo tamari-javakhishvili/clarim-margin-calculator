@@ -858,7 +858,6 @@ async function submitEmailGate(){
   document.getElementById('saved-email-display').textContent=email;
   document.getElementById('modal-step-1').style.display='none';
   document.getElementById('modal-step-2').style.display='';
-  document.querySelector('.co-btn').href=CONFIG.TRIAL_URL+'?email='+encodeURIComponent(email);
 
   // Save to localStorage so returning visitor is recognised
   try{localStorage.setItem('pts_email',email);localStorage.setItem('pts_saved',new Date().toISOString());}catch(e){}
