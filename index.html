@@ -577,7 +577,7 @@ const CONFIG = {
 // ================================================================
 let skus   = [];
 let nextId = 1;
-const CHANNELS = ['Shopify','Amazon','TikTok Shop','Walmart','Wholesale','Retail','Etsy','eBay','Other'];
+const CHANNELS = ['Shopify','Amazon','🔒 More channels — $39'];
 const THR = { scale:0.30, optimize:0.15, review:0.05 };
 
 const SAMPLE = [
@@ -585,7 +585,6 @@ const SAMPLE = [
   { sku:'Classic White Tee – S',    channel:'Shopify',     price:49, units:180, returnPct:8,  allInCost:20.0, feesPct:6,  adSpend:1200 },
   { sku:'Performance Socks 3-Pack', channel:'Amazon',      price:29, units:240, returnPct:6,  allInCost:13.0, feesPct:17, adSpend:700  },
   { sku:'Protein Shaker Bottle',    channel:'Wholesale',   price:18, units:220, returnPct:5,  allInCost:12.3, feesPct:4,  adSpend:300  },
-  { sku:'Travel Mug Matte Black',   channel:'Retail',      price:34, units:130, returnPct:14, allInCost:15.0, feesPct:9,  adSpend:1000 },
   { sku:'Graphic Hoodie Limited',   channel:'TikTok Shop', price:59, units:95,  returnPct:32, allInCost:29.5, feesPct:9,  adSpend:3800 },
 ];
 
@@ -760,19 +759,31 @@ function resetLever(id){document.getElementById(id).value='';renderScenario();}
 // ================================================================
 // CRUD
 // ================================================================
-function addRow(){skus.push({id:nextId++,sku:'',channel:'Shopify',price:0,units:0,returnPct:0,allInCost:0,feesPct:6,adSpend:0});renderAll();}
+function addRow(){
+  if(skus.length>=5){
+    alert('Free version is limited to 5 SKUs.\n\nThe full Profit Truth Sheet handles unlimited SKUs across all channels — Excel template + 12-category benchmarks PDF + multi-channel support.\n\nGet it for $39: [GUMROAD_URL]');
+    return;
+  }
+  skus.push({id:nextId++,sku:'',channel:'Shopify',price:0,units:0,returnPct:0,allInCost:0,feesPct:6,adSpend:0});
+  renderAll();
+}
 function deleteRow(id){skus=skus.filter(s=>s.id!==id);renderAll();}
 
 function updateField(id,field,value){
   const s=skus.find(x=>x.id===id);if(!s)return;
-  if(field==='sku'||field==='channel')s[field]=value;else s[field]=value===''?0:+value;
-  const c=computeSku(s);
-  const cmEl=document.getElementById(`cm-${id}`),cmpEl=document.getElementById(`cmp-${id}`),decEl=document.getElementById(`dec-${id}`);
-  if(cmEl){cmEl.className='cell-computed'+(c.cm<0?' negative':'');cmEl.textContent=fmtUsd(c.cm);}
-  if(cmpEl){cmpEl.className='cell-computed'+(c.cm<0?' negative':'');cmpEl.textContent=fmtPct(c.cmPct);}
-  if(decEl){decEl.innerHTML=c.decision?`<span class="decision-pill ${c.decision}">${c.decision}</span>`:'—';}
-  renderSummary();
-  if(field==='sku')renderScenarioOptions();else renderScenario();
+  if(field==='channel' && value.includes('🔒')){
+    alert('Multi-channel support (TikTok, Walmart, Wholesale, Etsy, eBay) is part of the full Profit Truth Sheet — $39 on Gumroad.\n\nFor now, choose Shopify or Amazon.\n\n[GUMROAD_URL]');
+    s[field]='Shopify';
+    renderAll();
+    return;
+  }
+  if(field==='sku'||field==='channel')s[field]=value;else s[field]=value===''?0:+value;  const c=computeSku(s);
+ const cmEl=document.getElementById(`cm-${id}`),cmpEl=document.getElementById(`cmp-${id}`),decEl=document.getElementById(`dec-${id}`);
+ if(cmEl){cmEl.className='cell-computed'+(c.cm<0?' negative':'');cmEl.textContent=fmtUsd(c.cm);}
+ if(cmpEl){cmpEl.className='cell-computed'+(c.cm<0?' negative':'');cmpEl.textContent=fmtPct(c.cmPct);}
+ if(decEl){decEl.innerHTML=c.decision?`<span class="decision-pill ${c.decision}">${c.decision}</span>`:'—';}
+ renderSummary();
+ if(field==='sku')renderScenarioOptions();else renderScenario();
 }
 
 function loadSample(){skus=SAMPLE.map(s=>({id:nextId++,...s}));renderAll();}
@@ -820,6 +831,21 @@ function openEmailGate(){
 async function submitEmailGate(){
   const email=document.getElementById('gate-email').value.trim();
   if(!email||!email.includes('@')){document.getElementById('gate-email').focus();return;}
+
+  // Frequency limit — once per day per browser
+  try {
+    const lastSaved = localStorage.getItem('pts_saved');
+    if(lastSaved){
+      const hoursSince = (Date.now() - new Date(lastSaved).getTime()) / (1000*60*60);
+      if(hoursSince < 24){
+        const hoursLeft = Math.ceil(24 - hoursSince);
+        alert('Free web version: 1 analysis per 24 hours.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLef.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLeft + 'h.\n\nFor unlimited analysis any time, get the Profit Truth Sheet ($39) — Excel + benchmarks PDF, runs offline, no limits.\n\n[GUMROAD_URL]');
+        document.getElementById('gate-submit').disabled=false;
+        document.getElementById('gate-submit').textContent='Save →';
+        return;
+      }
+    }
+  } catch(e){}
 
   const btn=document.getElementById('gate-submit');
   btn.disabled=true; btn.textContent='Saving…';
