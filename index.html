@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free Ecommerce Contribution Margin Calculator — The Profit Truth Sheet</title>
+<meta name="description" content="Find out which of your SKUs are actually making you money. Return-adjusted contribution margin calculator with SCALE/OPTIMIZE/REVIEW/KILL decisions. Free. No signup needed.">
+<meta property="og:title" content="Free Ecommerce Margin Calculator — The Profit Truth Sheet">
+<meta property="og:description" content="Paste your SKUs. Get SCALE / OPTIMIZE / REVIEW / KILL decisions in 3 minutes. Built by an ecommerce CFO.">
+<meta property="og:url" content="https://clarim.io/ecommerce-margin-calculator/">
+<meta property="og:image" content="https://clarim.io/og-calculator.png">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://clarim.io/ecommerce-margin-calculator/">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg:#0a0b0d; --surface:#111318; --surface2:#181c24;
+    --border:#1e2330; --border2:#252d3d;
+    --text:#e8eaf0; --text-muted:#5a6380; --text-dim:#8892aa;
+    --scale:#00e5a0; --scale-bg:rgba(0,229,160,.10); --scale-border:rgba(0,229,160,.3);
+    --optimize:#f5c842; --optimize-bg:rgba(245,200,66,.10); --optimize-border:rgba(245,200,66,.3);
+    --review:#ff8c42; --review-bg:rgba(255,140,66,.10); --review-border:rgba(255,140,66,.3);
+    --kill:#ff3d5a; --kill-bg:rgba(255,61,90,.10); --kill-border:rgba(255,61,90,.3);
+    --accent:#4f8ef7;
+    --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans',sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.5;min-height:100vh}
+
+  /* ── HEADER ── */
+  .header{border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);position:sticky;top:0;z-index:50}
+  .header-left{display:flex;align-items:center;gap:14px}
+  .logo-mark{width:32px;height:32px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:600;font-size:13px;color:#fff;flex-shrink:0}
+  .header-title{font-size:15px;font-weight:600;color:var(--text)}
+  .header-sub{font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+  .header-right{display:flex;align-items:center;gap:10px}
+  .clarim-link{font-size:12px;color:var(--text-muted);font-family:var(--mono);text-decoration:none;border:1px solid var(--border2);padding:6px 12px;border-radius:4px;transition:all .2s}
+  .clarim-link:hover{color:var(--accent);border-color:var(--accent)}
+  .version-tag{font-size:11px;color:var(--text-muted);font-family:var(--mono);padding:4px 8px;border:1px solid var(--border);border-radius:4px}
+
+  /* ── CONTAINER ── */
+  .container{max-width:1320px;margin:0 auto;padding:24px 28px}
+
+  /* ── SWING LINE ── */
+  .swing-line{border-radius:8px;padding:14px 20px;margin-bottom:16px;border:1px solid;font-size:14px;font-weight:600;font-family:var(--mono);line-height:1.4;display:flex;align-items:center;gap:12px;transition:all .3s}
+  .swing-line .sl-icon{font-size:18px;flex-shrink:0}
+  .swing-line.empty  {color:var(--text-muted);background:var(--surface);border-color:var(--border)}
+  .swing-line.clean  {color:var(--scale);background:var(--scale-bg);border-color:var(--scale-border)}
+  .swing-line.warning{color:var(--kill);background:var(--kill-bg);border-color:var(--kill-border)}
+
+  /* ── HERO ── */
+  .hero{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin-bottom:16px;display:grid;grid-template-columns:1.4fr 1fr;gap:28px;align-items:start}
+  .hero-label{font-size:11px;color:var(--text-muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+  .hero-number{font-size:46px;font-weight:700;color:var(--text);font-family:var(--mono);letter-spacing:-.02em;line-height:1;transition:color .3s}
+  .hero-number.negative{color:var(--kill)}
+  .hero-sub{font-size:12px;color:var(--text-dim);margin-top:10px;font-family:var(--mono)}
+  .hero-sub .sep{color:var(--border2);margin:0 10px}
+  .hero-sub .val{color:var(--text);font-weight:600}
+  .hero-right{display:flex;flex-direction:column;gap:12px}
+  .status-badge{padding:9px 16px;border-radius:6px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);text-align:center;border:1px solid;transition:all .3s}
+  .status-nodata  {color:var(--text-muted);background:var(--surface2);border-color:var(--border2)}
+  .status-healthy {color:var(--scale);background:var(--scale-bg);border-color:var(--scale-border)}
+  .status-thin    {color:var(--optimize);background:var(--optimize-bg);border-color:var(--optimize-border)}
+  .status-risk    {color:var(--review);background:var(--review-bg);border-color:var(--review-border)}
+  .status-bleeding{color:var(--kill);background:var(--kill-bg);border-color:var(--kill-border)}
+  .heatmap{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .heat-cell{padding:10px 6px;border-radius:6px;border:1px solid;text-align:center}
+  .heat-cell.scale   {color:var(--scale);background:var(--scale-bg);border-color:var(--scale-border)}
+  .heat-cell.optimize{color:var(--optimize);background:var(--optimize-bg);border-color:var(--optimize-border)}
+  .heat-cell.review  {color:var(--review);background:var(--review-bg);border-color:var(--review-border)}
+  .heat-cell.kill    {color:var(--kill);background:var(--kill-bg);border-color:var(--kill-border)}
+  .heat-count{font-size:22px;font-weight:700;font-family:var(--mono);line-height:1}
+  .heat-label{font-size:9px;font-weight:600;letter-spacing:.1em;margin-top:3px;font-family:var(--mono)}
+  .cm-bands{margin-top:2px}
+  .cm-band-row{display:flex;align-items:center;justify-content:space-between;padding:4px 10px;border-radius:4px;margin-bottom:3px;font-family:var(--mono);font-size:10px}
+  .cm-band-row.scale   {color:var(--scale);background:var(--scale-bg)}
+  .cm-band-row.optimize{color:var(--optimize);background:var(--optimize-bg)}
+  .cm-band-row.review  {color:var(--review);background:var(--review-bg)}
+  .cm-band-row.kill    {color:var(--kill);background:var(--kill-bg)}
+  .cm-band-label{font-weight:700;letter-spacing:.08em}
+  .cm-band-note{opacity:.65;font-size:9px}
+
+  /* ── TOP ACTIONS ── */
+  .top-actions{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+  .action-bar{padding:13px 18px;border-radius:8px;border:1px solid;font-size:13px;line-height:1.4;font-family:var(--mono)}
+  .action-bar.kill   {color:var(--kill);background:var(--kill-bg);border-color:var(--kill-border)}
+  .action-bar.scale  {color:var(--scale);background:var(--scale-bg);border-color:var(--scale-border)}
+  .action-bar.neutral{color:var(--text-muted);background:var(--surface);border-color:var(--border)}
+
+  /* ── CLARIM ESCALATION BANNER ── */
+  .clarim-banner{border-radius:8px;padding:14px 20px;margin-bottom:16px;border:1px solid var(--accent);background:rgba(79,142,247,.07);display:none;align-items:center;justify-content:space-between;gap:16px;font-family:var(--mono);font-size:12px;color:var(--text-dim)}
+  .clarim-banner.visible{display:flex}
+  .clarim-banner strong{color:var(--accent)}
+  .clarim-banner a{color:var(--accent);text-decoration:none;font-weight:600;border:1px solid var(--accent);padding:5px 12px;border-radius:4px;white-space:nowrap}
+  .clarim-banner a:hover{background:rgba(79,142,247,.15)}
+
+  /* ── THRESHOLDS ── */
+  .thresholds-bar{display:flex;align-items:center;gap:18px;padding:11px 18px;background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-size:12px;font-family:var(--mono);flex-wrap:wrap}
+  .thresholds-label{color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;font-weight:600;font-size:10px}
+  .thr-inline{display:flex;align-items:center;gap:6px;color:var(--text)}
+  .thr-inline .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+  .thr-inline .dot.scale   {background:var(--scale)}
+  .thr-inline .dot.optimize{background:var(--optimize)}
+  .thr-inline .dot.review  {background:var(--review)}
+  .thr-inline input{width:46px;padding:3px 6px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-family:var(--mono);font-size:13px;text-align:center;outline:none}
+  .thr-inline input:focus{border-color:var(--accent)}
+  .thr-hint{color:var(--text-muted);font-size:11px;cursor:help;border-bottom:1px dotted var(--text-muted)}
+  .thr-reset{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:11px;font-family:var(--mono);padding:2px 6px;border-radius:3px;margin-left:auto}
+  .thr-reset:hover{color:var(--accent)}
+
+  /* ── CARD ── */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+  .card-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+  .card-title{font-size:14px;font-weight:600;color:var(--text)}
+  .card-sub{font-size:11px;color:var(--text-muted);margin-top:2px;max-width:700px}
+  .toolbar-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .btn{font-family:var(--sans);font-size:12px;font-weight:500;padding:7px 13px;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .btn-primary:hover{background:#3a7ce0;color:#fff;border-color:#3a7ce0}
+  .btn-save{background:transparent;color:var(--scale);border-color:var(--scale-border)}
+  .btn-save:hover{background:var(--scale-bg);color:var(--scale)}
+  input[type="file"]{display:none}
+
+  /* ── TABLE ── */
+  .table-wrap{overflow-x:auto}
+  table.sku-table{width:100%;border-collapse:collapse;font-size:13px;min-width:1100px}
+  table.sku-table th{text-align:left;padding:11px 10px;font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;background:var(--surface2);border-bottom:1px solid var(--border);font-family:var(--mono);white-space:nowrap}
+  table.sku-table th.num{text-align:right}
+  table.sku-table th.center{text-align:center}
+  table.sku-table td{padding:7px 10px;border-bottom:1px solid var(--border);vertical-align:middle}
+  table.sku-table tr:last-child td{border-bottom:none}
+  table.sku-table tr:hover td{background:rgba(255,255,255,.015)}
+  .cell-input{background:transparent;border:1px solid transparent;color:var(--text);font-family:var(--mono);font-size:13px;padding:5px 7px;border-radius:4px;width:100%;outline:none;transition:all .12s}
+  .cell-input:focus{border-color:var(--accent);background:var(--surface2)}
+  .cell-input:hover{border-color:var(--border2)}
+  .cell-input.text{text-align:left;font-family:var(--sans)}
+  .cell-input.num{text-align:right}
+  .cell-select{background:transparent;border:1px solid transparent;color:var(--text);font-family:var(--sans);font-size:13px;padding:5px 7px;border-radius:4px;width:100%;outline:none;cursor:pointer}
+  .cell-select:focus{border-color:var(--accent);background:var(--surface2)}
+  .cell-select:hover{border-color:var(--border2)}
+  .cell-select option{background:var(--surface);color:var(--text)}
+  .cell-computed{text-align:right;font-family:var(--mono);color:var(--text);padding:7px 10px}
+  .cell-computed.negative{color:var(--kill)}
+  .decision-pill{display:inline-block;padding:3px 11px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:.08em;font-family:var(--mono);border:1px solid}
+  .decision-pill.SCALE   {color:var(--scale);background:var(--scale-bg);border-color:var(--scale-border)}
+  .decision-pill.OPTIMIZE{color:var(--optimize);background:var(--optimize-bg);border-color:var(--optimize-border)}
+  .decision-pill.REVIEW  {color:var(--review);background:var(--review-bg);border-color:var(--review-border)}
+  .decision-pill.KILL    {color:var(--kill);background:var(--kill-bg);border-color:var(--kill-border)}
+  .row-delete{color:var(--text-muted);background:transparent;border:none;cursor:pointer;font-size:14px;padding:5px 7px;border-radius:4px;transition:all .15s}
+  .row-delete:hover{color:var(--kill);background:var(--kill-bg)}
+  .add-row{padding:13px;text-align:center;color:var(--text-muted);cursor:pointer;font-size:12px;font-family:var(--mono);transition:all .15s;border-top:1px dashed var(--border2)}
+  .add-row:hover{color:var(--accent);background:var(--surface2)}
+  .empty-state{padding:40px 20px;text-align:center;color:var(--text-muted);font-size:13px}
+
+  /* ── SCENARIO ── */
+  .scenario-body{display:grid;grid-template-columns:1fr 1.3fr;gap:28px;padding:22px}
+  .scenario-left .field-label{font-size:10px;color:var(--text-muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+  .scenario-left select{width:100%;padding:10px 12px;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;font-family:var(--sans);font-size:14px;cursor:pointer;outline:none}
+  .scenario-left select:focus{border-color:var(--accent)}
+  .scenario-left select option{background:var(--surface);color:var(--text)}
+  .levers{margin-top:18px;display:flex;flex-direction:column;gap:15px}
+  .lever{display:flex;flex-direction:column;gap:5px}
+  .lever-head{display:flex;justify-content:space-between;align-items:center}
+  .lever-name{font-size:12px;color:var(--text);font-weight:500}
+  .lever-current{font-size:11px;color:var(--text-muted);font-family:var(--mono)}
+  .lever-input-wrap{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:0 12px;transition:border-color .15s}
+  .lever-input-wrap:focus-within{border-color:var(--accent)}
+  .lever-prefix{font-size:13px;color:var(--text-muted);font-family:var(--mono);margin-right:6px}
+  .lever-input{flex:1;background:transparent;border:none;color:var(--text);font-family:var(--mono);font-size:14px;padding:10px 0;outline:none}
+  .lever-input::placeholder{color:var(--text-muted)}
+  .lever-suffix{font-size:12px;color:var(--text-muted);font-family:var(--mono)}
+  .lever-reset{font-size:11px;color:var(--text-muted);background:transparent;border:none;cursor:pointer;font-family:var(--mono);padding:2px 6px;border-radius:3px}
+  .lever-reset:hover{color:var(--accent)}
+  .lever-hint{font-size:10px;color:var(--text-muted);font-family:var(--mono);font-style:italic}
+  .scenario-right{display:flex;flex-direction:column;gap:12px}
+  .compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .compare-card{padding:14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px}
+  .compare-card.scenario{border-color:var(--accent)}
+  .compare-label{font-size:9px;color:var(--text-muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+  .compare-card.scenario .compare-label{color:var(--accent)}
+  .compare-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;font-family:var(--mono)}
+  .compare-row span:first-child{color:var(--text-muted)}
+  .compare-row span:last-child{color:var(--text);font-weight:500}
+  .compare-row.highlight span:last-child{font-size:14px;font-weight:700}
+  .decision-shift{padding:12px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--mono);font-size:12px}
+  .decision-shift .arrow{color:var(--text-muted);font-size:16px}
+  .annual-impact{padding:14px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);text-align:center;font-family:var(--mono)}
+  .annual-impact .label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+  .annual-impact .value{font-size:24px;font-weight:700;transition:color .2s}
+  .annual-impact .value.positive{color:var(--scale)}
+  .annual-impact .value.negative{color:var(--kill)}
+  .annual-impact .value.neutral{color:var(--text-muted)}
+  .insight-line{padding:11px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;font-size:12px;color:var(--text-dim);line-height:1.6;font-family:var(--mono)}
+
+  /* ── SNAPSHOTS ── */
+  .snap-empty{padding:28px 20px;text-align:center;color:var(--text-muted);font-size:13px;font-family:var(--mono)}
+  .snap-row{display:grid;grid-template-columns:110px 1fr 1fr 1fr 1.2fr 1fr 32px;gap:12px;align-items:center;padding:11px 20px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px}
+  .snap-row:last-child{border-bottom:none}
+  .snap-row.head{background:var(--surface2);color:var(--text-muted);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+  .snap-cm{font-weight:600;color:var(--text)}
+  .snap-cm.negative{color:var(--kill)}
+  .snap-heat{display:flex;gap:4px;font-size:11px}
+  .snap-heat span{padding:2px 6px;border-radius:3px;font-weight:600}
+  .snap-heat .s{color:var(--scale);background:var(--scale-bg)}
+  .snap-heat .o{color:var(--optimize);background:var(--optimize-bg)}
+  .snap-heat .r{color:var(--review);background:var(--review-bg)}
+  .snap-heat .k{color:var(--kill);background:var(--kill-bg)}
+  .snap-delta.positive{color:var(--scale)}
+  .snap-delta.negative{color:var(--kill)}
+
+  /* ── FLOATING SAVE BUTTON ── */
+  .float-save{
+    position:fixed;bottom:28px;right:28px;z-index:40;
+    display:none;align-items:center;gap:10px;
+    padding:14px 22px;border-radius:50px;
+    background:var(--scale);color:#0a0b0d;
+    font-family:var(--mono);font-size:13px;font-weight:700;
+    border:none;cursor:pointer;
+    box-shadow:0 4px 24px rgba(0,229,160,.35);
+    transition:all .2s;
+  }
+  .float-save:hover{background:#00c98d;transform:translateY(-2px);box-shadow:0 6px 32px rgba(0,229,160,.5)}
+  .float-save.visible{display:flex}
+  .float-save-icon{font-size:16px}
+
+  /* ── EMAIL GATE MODAL ── */
+  .modal-overlay{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:24px;
+  }
+  .modal-overlay.open{display:flex}
+  .modal{
+    background:var(--surface);border:1px solid var(--border2);border-radius:14px;
+    width:100%;max-width:480px;overflow:hidden;
+    box-shadow:0 24px 64px rgba(0,0,0,.6);
+  }
+  .modal-head{padding:20px 24px 0;display:flex;justify-content:space-between;align-items:flex-start}
+  .modal-title{font-size:17px;font-weight:700;color:var(--text);line-height:1.2}
+  .modal-close{background:transparent;border:none;color:var(--text-muted);cursor:pointer;font-size:20px;padding:0 4px;line-height:1}
+  .modal-close:hover{color:var(--text)}
+  .modal-body{padding:16px 24px 24px}
+
+  /* summary card inside modal */
+  .modal-summary{
+    background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+    padding:14px 16px;margin-bottom:18px;font-family:var(--mono);font-size:12px;
+  }
+  .modal-summary .ms-row{display:flex;justify-content:space-between;padding:3px 0;color:var(--text-dim)}
+  .modal-summary .ms-row span:last-child{color:var(--text);font-weight:600}
+  .modal-summary .ms-swing{margin-top:10px;padding:8px 12px;border-radius:6px;background:var(--kill-bg);border:1px solid var(--kill-border);color:var(--kill);font-size:11px;font-weight:600}
+  .modal-summary .ms-swing.clean{background:var(--scale-bg);border-color:var(--scale-border);color:var(--scale)}
+
+  .modal-label{font-size:11px;color:var(--text-muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+  .modal-email-wrap{display:flex;gap:10px;margin-bottom:10px}
+  .modal-email-input{
+    flex:1;background:var(--surface2);border:1px solid var(--border2);
+    color:var(--text);font-family:var(--sans);font-size:14px;
+    padding:11px 14px;border-radius:7px;outline:none;transition:border-color .15s;
+  }
+  .modal-email-input:focus{border-color:var(--accent)}
+  .modal-email-input::placeholder{color:var(--text-muted)}
+  .modal-submit{
+    background:var(--accent);color:#fff;border:none;border-radius:7px;
+    padding:11px 18px;font-family:var(--sans);font-size:13px;font-weight:600;
+    cursor:pointer;white-space:nowrap;transition:all .15s;
+  }
+  .modal-submit:hover{background:#3a7ce0}
+  .modal-submit:disabled{opacity:.5;cursor:not-allowed}
+  .modal-fine{font-size:10px;color:var(--text-muted);font-family:var(--mono)}
+
+  /* post-submit view inside modal */
+  .modal-success{display:none;flex-direction:column;gap:16px}
+  .modal-success.visible{display:flex}
+  .modal-success .check{font-size:32px;text-align:center;color:var(--scale)}
+  .modal-success .saved-note{text-align:center;font-size:13px;color:var(--text-dim);font-family:var(--mono)}
+  .modal-success .saved-note strong{color:var(--scale)}
+
+  .clarim-offer{background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:18px 20px}
+  .clarim-offer .co-head{font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .clarim-offer .co-body{font-size:12px;color:var(--text-dim);font-family:var(--mono);margin-bottom:14px;line-height:1.6}
+  .clarim-offer .co-cta{display:flex;gap:10px;flex-wrap:wrap}
+  .clarim-offer a.co-btn{
+    display:inline-block;background:var(--accent);color:#fff;text-decoration:none;
+    padding:10px 18px;border-radius:6px;font-size:13px;font-weight:600;
+    font-family:var(--sans);transition:all .15s;
+  }
+  .clarim-offer a.co-btn:hover{background:#3a7ce0}
+  .clarim-offer button.co-later{background:transparent;border:none;color:var(--text-muted);font-family:var(--mono);font-size:12px;cursor:pointer;padding:10px 0}
+  .clarim-offer button.co-later:hover{color:var(--text)}
+
+  /* ── FOOTER ── */
+  .footer{padding:22px 28px;text-align:center;font-size:12px;color:var(--text-muted);font-family:var(--mono);border-top:1px solid var(--border);margin-top:8px}
+  .footer a{color:var(--accent);text-decoration:none}
+  .footer a:hover{text-decoration:underline}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px){
+    .scenario-body{grid-template-columns:1fr}
+    .hero{grid-template-columns:1fr}
+    .container{padding:16px}
+    .float-save{bottom:16px;right:16px;padding:12px 18px;font-size:12px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- HEADER -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-mark">CM</div>
+    <div>
+      <div class="header-title">The Profit Truth Sheet</div>
+      <div class="header-sub">Free · return-adjusted · SKU-level · decision-first</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="version-tag">free tool</span>
+    <a href="https://clarim.io" class="clarim-link">clarim.io ↗</a>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- MAIN -->
+<!-- ════════════════════════════════════════════════════════ -->
+<div class="container">
+
+  <div class="swing-line empty" id="swing-line">
+    <span class="sl-icon" id="sl-icon">○</span>
+    <span id="sl-text">Fill in your SKUs below. Dashboard updates live as you type.</span>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div>
+      <div class="hero-label">Real Monthly Profit — after returns, COGS, fees &amp; ads</div>
+      <div class="hero-number" id="hero-profit">$0</div>
+      <div class="hero-sub">
+        Annual: <span class="val" id="hero-annual">$0</span>
+        <span class="sep">·</span>
+        Blended CM: <span class="val" id="hero-cm">—</span>
+        <span class="sep">·</span>
+        Net Revenue: <span class="val" id="hero-rev">$0</span>
+      </div>
+    </div>
+    <div class="hero-right">
+      <div class="status-badge status-nodata" id="status-badge">NO DATA</div>
+      <div class="heatmap">
+        <div class="heat-cell scale">   <div class="heat-count" id="h-scale">0</div>   <div class="heat-label">SCALE</div></div>
+        <div class="heat-cell optimize"><div class="heat-count" id="h-opt">0</div>     <div class="heat-label">OPTIM</div></div>
+        <div class="heat-cell review">  <div class="heat-count" id="h-review">0</div>  <div class="heat-label">REVIEW</div></div>
+        <div class="heat-cell kill">    <div class="heat-count" id="h-kill">0</div>    <div class="heat-label">KILL</div></div>
+      </div>
+      <div class="cm-bands">
+        <div class="cm-band-row scale">   <span class="cm-band-label">SCALE</span>    <span>≥ 30%</span><span class="cm-band-note">push ads</span></div>
+        <div class="cm-band-row optimize"><span class="cm-band-label">OPTIMIZE</span> <span>15–30%</span><span class="cm-band-note">tune levers</span></div>
+        <div class="cm-band-row review">  <span class="cm-band-label">REVIEW</span>   <span>5–15%</span><span class="cm-band-note">investigate</span></div>
+        <div class="cm-band-row kill">    <span class="cm-band-label">KILL</span>     <span>&lt; 5%</span><span class="cm-band-note">stop the bleed</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-actions" id="top-actions"></div>
+
+  <div class="clarim-banner" id="clarim-banner">
+    <span>This portfolio needs monthly tracking — not a one-time check. <strong>clarim.io</strong> runs this analysis live with Shopify auto-sync across every SKU × Channel.</span>
+    <a href="https://clarim.io/trial" target="_blank">Free trial run ↗</a>
+  </div>
+
+  <!-- THRESHOLDS -->
+  <div class="thresholds-bar">
+    <span class="thresholds-label">Thresholds</span>
+    <div class="thr-inline"><span class="dot scale"></span>SCALE ≥ <input type="number" id="thr-scale" value="30" min="1" max="80" step="1" oninput="updateThresholds()">%</div>
+    <div class="thr-inline"><span class="dot optimize"></span>OPTIMIZE ≥ <input type="number" id="thr-optimize" value="15" min="0" max="60" step="1" oninput="updateThresholds()">%</div>
+    <div class="thr-inline"><span class="dot review"></span>REVIEW ≥ <input type="number" id="thr-review" value="5" min="-20" max="40" step="1" oninput="updateThresholds()">%</div>
+    <span class="thr-hint" title="Apparel: 30/15/5&#10;Supplements: 20/10/3&#10;Electronics: 15/8/2&#10;Beauty: 35/20/8">category presets ⓘ</span>
+    <button class="thr-reset" onclick="resetThresholds()">reset to apparel default</button>
+  </div>
+
+  <!-- SKU TABLE -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">Your SKUs</div>
+        <div class="card-sub">Edit any cell — dashboard updates live. All-in Cost = product + packaging + fulfillment. Fees % = platform + processing (Shopify ≈ 6%, Amazon ≈ 17%, TikTok ≈ 10%).</div>
+      </div>
+      <div class="toolbar-actions">
+        <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
+        <button class="btn" onclick="document.getElementById('excel-upload').click()">Import Excel / CSV</button>
+        <button class="btn" onclick="loadSample()">Load sample</button>
+        <button class="btn btn-save" onclick="openEmailGate()" id="save-btn-toolbar" style="display:none">💾 Save analysis</button>
+        <button class="btn btn-primary" onclick="addRow()">+ Add SKU</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="sku-table">
+        <thead><tr>
+          <th style="width:21%">SKU</th>
+          <th style="width:10%">Channel</th>
+          <th class="num" style="width:7%">Price $</th>
+          <th class="num" style="width:7%">Units/mo</th>
+          <th class="num" style="width:7%">Return %</th>
+          <th class="num" style="width:8%">All-in Cost $</th>
+          <th class="num" style="width:6%">Fees %</th>
+          <th class="num" style="width:8%">Ad Spend $/mo</th>
+          <th class="num" style="width:9%">CM $/mo</th>
+          <th class="num" style="width:6%">CM %</th>
+          <th class="center" style="width:9%">Decision</th>
+          <th style="width:40px"></th>
+        </tr></thead>
+        <tbody id="sku-body"></tbody>
+      </table>
+      <div class="add-row" onclick="addRow()">+ Add SKU</div>
+    </div>
+  </div>
+
+  <!-- SCENARIO -->
+  <div class="card">
+    <div class="card-head">
+      <div>
+        <div class="card-title">⚡ Scenario Simulator</div>
+        <div class="card-sub">Pick a SKU. Change one lever. See the decision flip in real time.</div>
+      </div>
+    </div>
+    <div class="scenario-body">
+      <div class="scenario-left">
+        <div class="field-label">Select SKU</div>
+        <select id="scenario-sku" onchange="renderScenario()"></select>
+        <div class="levers">
+          <div class="lever">
+            <div class="lever-head"><span class="lever-name">Selling Price</span><span class="lever-current" id="base-price">—</span></div>
+            <div class="lever-input-wrap"><span class="lever-prefix">$</span><input type="number" class="lever-input" id="lev-price" placeholder="keep base" step="0.01" oninput="renderScenario()"><button class="lever-reset" onclick="resetLever('lev-price')">reset</button></div>
+            <span class="lever-hint">Raising price 5–10% often lifts CM more than cutting COGS.</span>
+          </div>
+          <div class="lever">
+            <div class="lever-head"><span class="lever-name">Monthly Ad Spend</span><span class="lever-current" id="base-ad">—</span></div>
+            <div class="lever-input-wrap"><span class="lever-prefix">$</span><input type="number" class="lever-input" id="lev-ad" placeholder="keep base" step="10" oninput="renderScenario()"><button class="lever-reset" onclick="resetLever('lev-ad')">reset</button></div>
+            <span class="lever-hint">Cutting ads on a KILL SKU is the fastest turnaround lever.</span>
+          </div>
+          <div class="lever">
+            <div class="lever-head"><span class="lever-name">Return Rate</span><span class="lever-current" id="base-return">—</span></div>
+            <div class="lever-input-wrap"><input type="number" class="lever-input" id="lev-return" placeholder="keep base" step="0.5" oninput="renderScenario()"><span class="lever-suffix">%</span><button class="lever-reset" onclick="resetLever('lev-return')">reset</button></div>
+            <span class="lever-hint">A 10pp return drop can move a KILL to OPTIMIZE on its own.</span>
+          </div>
+        </div>
+      </div>
+      <div class="scenario-right">
+        <div class="decision-shift">
+          <span style="font-size:10px;color:var(--text-muted);letter-spacing:.1em;font-family:var(--mono)">DECISION</span>
+          <span class="decision-pill" id="dec-base">—</span>
+          <span class="arrow">→</span>
+          <span class="decision-pill" id="dec-scenario">—</span>
+        </div>
+        <div class="compare-grid">
+          <div class="compare-card">
+            <div class="compare-label">BASE</div>
+            <div class="compare-row"><span>Net Revenue</span><span id="b-rev">—</span></div>
+            <div class="compare-row"><span>CM %</span><span id="b-cmp">—</span></div>
+            <div class="compare-row highlight"><span>CM $ / month</span><span id="b-cm">—</span></div>
+          </div>
+          <div class="compare-card scenario">
+            <div class="compare-label">SCENARIO</div>
+            <div class="compare-row"><span>Net Revenue</span><span id="s-rev">—</span></div>
+            <div class="compare-row"><span>CM %</span><span id="s-cmp">—</span></div>
+            <div class="compare-row highlight"><span>CM $ / month</span><span id="s-cm">—</span></div>
+          </div>
+        </div>
+        <div class="annual-impact"><div class="label">12-Month Cash Impact</div><div class="value neutral" id="annual-val">—</div></div>
+        <div class="insight-line" id="insight">Pick a SKU and type a value in any lever to simulate.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SNAPSHOTS -->
+  <div class="card">
+    <div class="card-head">
+      <div><div class="card-title">📊 Monthly Snapshots</div><div class="card-sub">Save today's state. Compare month over month. Stored locally in this browser.</div></div>
+      <button class="btn btn-primary" onclick="saveSnapshot()">+ Save snapshot</button>
+    </div>
+    <div id="snapshot-warn"></div>
+    <div id="snapshot-list"></div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- FLOATING SAVE BUTTON -->
+<button class="float-save" id="float-save" onclick="openEmailGate()">
+  <span class="float-save-icon">💾</span>
+  Save my analysis
+</button>
+
+<!-- EMAIL GATE MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="maybeCloseModal(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+
+    <!-- STEP 1: Email input -->
+    <div id="modal-step-1">
+      <div class="modal-head">
+        <div class="modal-title" id="modal-title">Save your analysis</div>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Personalised summary card -->
+        <div class="modal-summary" id="modal-summary">
+          <div class="ms-row"><span>Portfolio status</span><span id="ms-status">—</span></div>
+          <div class="ms-row"><span>Monthly profit</span><span id="ms-profit">—</span></div>
+          <div class="ms-row"><span>Blended CM %</span><span id="ms-cm">—</span></div>
+          <div class="ms-row"><span>Decisions</span><span id="ms-decisions">—</span></div>
+          <div class="ms-swing" id="ms-swing">—</div>
+        </div>
+
+        <div class="modal-label">Your email — to send you the analysis recap</div>
+        <div class="modal-email-wrap">
+          <input type="email" class="modal-email-input" id="gate-email" placeholder="you@yourstore.com" autocomplete="email">
+          <button class="modal-submit" id="gate-submit" onclick="submitEmailGate()">Save →</button>
+        </div>
+        <div class="modal-fine">No spam. One email with your analysis summary. You can opt out instantly.</div>
+      </div>
+    </div>
+
+    <!-- STEP 2: Post-submit Clarim offer -->
+    <div id="modal-step-2" style="display:none">
+      <div class="modal-head">
+        <div class="modal-title">Saved ✓</div>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-success visible">
+          <div class="check">✓</div>
+          <div class="saved-note">Analysis saved to <strong id="saved-email-display">—</strong>. Check your inbox in a few minutes.</div>
+          <div class="clarim-offer">
+            <div class="co-head">Want this done automatically every month?</div>
+            <div class="co-body" id="co-body-text">
+              This spreadsheet shows one portfolio snapshot. Clarim runs the same analysis live across every SKU × Channel — Shopify auto-sync, no manual entry, PDF memo delivered in minutes.
+            </div>
+            <div class="co-cta">
+              <a href="https://clarim.io/pricing" target="_blank" class="co-btn">Try Clarim free →</a>
+              <button class="co-later" onclick="closeModal()">Maybe later</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  The Profit Truth Sheet &nbsp;·&nbsp; free tool by <a href="https://clarim.io" target="_blank">clarim.io</a> &nbsp;·&nbsp;
+  Need this automated? <a href="https://clarim.io/pricing" target="_blank">Try Clarim →</a>
+</div>
+
+<!-- ════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT -->
+<!-- ════════════════════════════════════════════════════════ -->
+<script>
+// ╔══════════════════════════════════════════════════════════╗
+// ║  CONFIG — change these two lines, nothing else needed    ║
+// ╚══════════════════════════════════════════════════════════╝
+const CONFIG = {
+  // Your API endpoint. See DEPLOY.md for how to build it.
+  // Fallback: swap this for a Formspree URL (see DEPLOY.md section 3)
+  EMAIL_ENDPOINT: 'https://formspree.io/f/mkoklqla',
+
+  // Clarim trial URL (used in post-submit offer)
+  TRIAL_URL: 'https://clarim.io/pricing',
+};
+
+// ================================================================
+// STATE
+// ================================================================
+let skus   = [];
+let nextId = 1;
+const CHANNELS = ['Shopify','Amazon','TikTok Shop','Walmart','Wholesale','Retail','Etsy','eBay','Other'];
+const THR = { scale:0.30, optimize:0.15, review:0.05 };
+
+const SAMPLE = [
+  { sku:'Resistance Band Kit',      channel:'Shopify',     price:39, units:150, returnPct:4,  allInCost:9.0,  feesPct:6,  adSpend:600  },
+  { sku:'Classic White Tee – S',    channel:'Shopify',     price:49, units:180, returnPct:8,  allInCost:20.0, feesPct:6,  adSpend:1200 },
+  { sku:'Performance Socks 3-Pack', channel:'Amazon',      price:29, units:240, returnPct:6,  allInCost:13.0, feesPct:17, adSpend:700  },
+  { sku:'Protein Shaker Bottle',    channel:'Wholesale',   price:18, units:220, returnPct:5,  allInCost:12.3, feesPct:4,  adSpend:300  },
+  { sku:'Travel Mug Matte Black',   channel:'Retail',      price:34, units:130, returnPct:14, allInCost:15.0, feesPct:9,  adSpend:1000 },
+  { sku:'Graphic Hoodie Limited',   channel:'TikTok Shop', price:59, units:95,  returnPct:32, allInCost:29.5, feesPct:9,  adSpend:3800 },
+];
+
+// ================================================================
+// MATH
+// ================================================================
+function computeSku(s) {
+  const price=+s.price||0, units=+s.units||0, ret=(+s.returnPct||0)/100;
+  const cost=+s.allInCost||0, fees=(+s.feesPct||0)/100, ad=+s.adSpend||0;
+  const netRev=price*units*(1-ret);
+  const cm=netRev-cost*units-netRev*fees-ad;
+  const cmPct=netRev>0?cm/netRev:0;
+  let decision='';
+  if(price>0||units>0){
+    if(cmPct>=THR.scale) decision='SCALE';
+    else if(cmPct>=THR.optimize) decision='OPTIMIZE';
+    else if(cmPct>=THR.review) decision='REVIEW';
+    else decision='KILL';
+  }
+  return {netRev,cm,cmPct,decision};
+}
+
+const fmtUsd       = v=>(v<0?'-$':'$')+Math.abs(Math.round(v)).toLocaleString();
+const fmtUsdSigned = v=>(v>=0?'+$':'-$')+Math.abs(Math.round(v)).toLocaleString();
+const fmtPct       = v=>(v*100).toFixed(1)+'%';
+const esc          = s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+
+// ================================================================
+// RENDER TABLE
+// ================================================================
+function renderTable(){
+  const body=document.getElementById('sku-body');
+  if(!skus.length){
+    body.innerHTML=`<tr><td colspan="12" class="empty-state">
+      No SKUs yet. <button class="btn" style="margin:0 6px" onclick="loadSample()">Load sample data</button>
+      or <button class="btn btn-primary" style="margin-left:6px" onclick="addRow()">+ Add SKU</button>
+    </td></tr>`;
+    return;
+  }
+  body.innerHTML=skus.map(s=>{
+    const c=computeSku(s);
+    const opts=CHANNELS.map(ch=>`<option value="${ch}"${ch===s.channel?' selected':''}>${ch}</option>`).join('');
+    return`<tr data-id="${s.id}">
+      <td><input class="cell-input text" type="text" value="${esc(s.sku)}" onchange="updateField(${s.id},'sku',this.value)" placeholder="SKU name"></td>
+      <td><select class="cell-select" onchange="updateField(${s.id},'channel',this.value)">${opts}</select></td>
+      <td><input class="cell-input num" type="number" value="${s.price}"     step="0.01" oninput="updateField(${s.id},'price',this.value)"></td>
+      <td><input class="cell-input num" type="number" value="${s.units}"     step="1"    oninput="updateField(${s.id},'units',this.value)"></td>
+      <td><input class="cell-input num" type="number" value="${s.returnPct}" step="0.5"  oninput="updateField(${s.id},'returnPct',this.value)"></td>
+      <td><input class="cell-input num" type="number" value="${s.allInCost}" step="0.01" oninput="updateField(${s.id},'allInCost',this.value)"></td>
+      <td><input class="cell-input num" type="number" value="${s.feesPct}"   step="0.5"  oninput="updateField(${s.id},'feesPct',this.value)"></td>
+      <td><input class="cell-input num" type="number" value="${s.adSpend}"   step="10"   oninput="updateField(${s.id},'adSpend',this.value)"></td>
+      <td class="cell-computed${c.cm<0?' negative':''}" id="cm-${s.id}">${fmtUsd(c.cm)}</td>
+      <td class="cell-computed${c.cm<0?' negative':''}" id="cmp-${s.id}">${fmtPct(c.cmPct)}</td>
+      <td style="text-align:center" id="dec-${s.id}">${c.decision?`<span class="decision-pill ${c.decision}">${c.decision}</span>`:'—'}</td>
+      <td><button class="row-delete" onclick="deleteRow(${s.id})" title="Delete">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ================================================================
+// RENDER SUMMARY
+// ================================================================
+function renderSummary(){
+  let totalCm=0, totalRev=0;
+  const counts={SCALE:0,OPTIMIZE:0,REVIEW:0,KILL:0};
+  const computed=skus.map(s=>({s,c:computeSku(s)})).filter(x=>x.s.sku&&x.c.decision);
+  computed.forEach(({c})=>{totalCm+=c.cm;totalRev+=c.netRev;if(counts[c.decision]!==undefined)counts[c.decision]++;});
+
+  const profEl=document.getElementById('hero-profit');
+  profEl.textContent=fmtUsd(totalCm);
+  profEl.className='hero-number'+(totalCm<0?' negative':'');
+  document.getElementById('hero-annual').textContent=fmtUsd(totalCm*12);
+  document.getElementById('hero-cm').textContent=totalRev>0?fmtPct(totalCm/totalRev):'—';
+  document.getElementById('hero-rev').textContent=fmtUsd(totalRev);
+  document.getElementById('h-scale').textContent=counts.SCALE;
+  document.getElementById('h-opt').textContent=counts.OPTIMIZE;
+  document.getElementById('h-review').textContent=counts.REVIEW;
+  document.getElementById('h-kill').textContent=counts.KILL;
+
+  const badge=document.getElementById('status-badge');
+  const blended=totalRev>0?totalCm/totalRev:null;
+  let status='nodata';
+  if(!computed.length){badge.textContent='NO DATA';}
+  else if(blended>=0.20){badge.textContent='HEALTHY';status='healthy';}
+  else if(blended>=0.10){badge.textContent='THIN';status='thin';}
+  else if(blended>=0)  {badge.textContent='AT RISK';status='risk';}
+  else                 {badge.textContent='BLEEDING';status='bleeding';}
+  badge.className=`status-badge status-${status}`;
+
+  renderSwingLine(computed,counts);
+
+  // Clarim escalation banner
+  const banner=document.getElementById('clarim-banner');
+  (status==='bleeding'||status==='risk')?banner.classList.add('visible'):banner.classList.remove('visible');
+
+  renderTopActions(computed);
+
+  // Show/hide floating save button + toolbar save button
+  const hasSKUs=computed.length>0;
+  document.getElementById('float-save').className='float-save'+(hasSKUs?' visible':'');
+  document.getElementById('save-btn-toolbar').style.display=hasSKUs?'':'none';
+
+  // Cache summary for modal
+  window._lastSummary={totalCm,totalRev,blended,status,counts,computed};
+}
+
+function renderSwingLine(computed,counts){
+  const sl=document.getElementById('swing-line');
+  const icon=document.getElementById('sl-icon');
+  const text=document.getElementById('sl-text');
+  if(!computed.length){sl.className='swing-line empty';icon.textContent='○';text.textContent='Fill in your SKUs below. Dashboard updates live as you type.';return;}
+  const kills=computed.filter(x=>x.c.decision==='KILL');
+  if(!kills.length){sl.className='swing-line clean';icon.textContent='✓';text.textContent='No bleeders. The number below is your real floor.';return;}
+  const bleed=kills.reduce((a,x)=>a+x.c.cm,0);
+  const swing=Math.round(-bleed*12);
+  sl.className='swing-line warning';icon.textContent='⚠';
+  text.textContent=`Kill the ${kills.length===1?'1 bleeder':`${kills.length} bleeders`} → swing of $${swing.toLocaleString()}/yr back to the bottom line.`;
+}
+
+function renderTopActions(computed){
+  const c=document.getElementById('top-actions');
+  if(!computed.length){c.innerHTML='';return;}
+  const kills =computed.filter(x=>x.c.decision==='KILL').sort((a,b)=>a.c.cm-b.c.cm);
+  const scales=computed.filter(x=>x.c.decision==='SCALE').sort((a,b)=>b.c.cm-a.c.cm);
+  let h='';
+  if(kills.length) { const w=kills[0]; h+=`<div class="action-bar kill">① <strong>KILL FIRST → ${esc(w.s.sku)}</strong> (${esc(w.s.channel)}).  Bleeding <strong>${fmtUsd(-w.c.cm)}/mo</strong>.  Kill it = <strong>${fmtUsd(-w.c.cm*12)}/yr</strong> recovered.</div>`; }
+  else { h+=`<div class="action-bar neutral">① ✓ No KILL SKUs. Portfolio is clean.</div>`; }
+  if(scales.length){ const b=scales[0]; h+=`<div class="action-bar scale">② <strong>SCALE NEXT → ${esc(b.s.sku)}</strong> (${esc(b.s.channel)}).  Earns <strong>${fmtUsd(b.c.cm)}/mo</strong> at ${fmtPct(b.c.cmPct)} CM.  Push ad spend +20%.</div>`; }
+  else { h+=`<div class="action-bar neutral">② No SCALE SKUs yet. Fix the bleeders before spending more on ads.</div>`; }
+  c.innerHTML=h;
+}
+
+// ================================================================
+// SCENARIO
+// ================================================================
+function renderScenarioOptions(){
+  const sel=document.getElementById('scenario-sku');
+  const prev=sel.value;
+  const valid=skus.filter(s=>s.sku);
+  if(!valid.length){sel.innerHTML='<option value="">— no SKUs yet —</option>';renderScenario();return;}
+  sel.innerHTML=valid.map(s=>`<option value="${s.id}">${esc(s.sku)}</option>`).join('');
+  if(!prev||!valid.find(s=>String(s.id)===prev)){
+    const comp=valid.map(s=>({s,c:computeSku(s)}));
+    const worst=comp.filter(x=>x.c.decision==='KILL').sort((a,b)=>a.c.cm-b.c.cm)[0];
+    sel.value=worst?worst.s.id:valid[0].id;
+  } else sel.value=prev;
+  renderScenario();
+}
+
+function renderScenario(){
+  const s=skus.find(x=>x.id===+document.getElementById('scenario-sku').value);
+  if(!s){['base-price','base-ad','base-return','b-rev','b-cmp','b-cm','s-rev','s-cmp','s-cm','annual-val'].forEach(id=>document.getElementById(id).textContent='—');['dec-base','dec-scenario'].forEach(id=>{document.getElementById(id).textContent='—';document.getElementById(id).className='decision-pill'});document.getElementById('annual-val').className='value neutral';return;}
+  document.getElementById('base-price').textContent='base $'+s.price;
+  document.getElementById('base-ad').textContent='base $'+(+s.adSpend).toLocaleString();
+  document.getElementById('base-return').textContent='base '+(+s.returnPct).toFixed(1)+'%';
+  const lp=document.getElementById('lev-price').value,la=document.getElementById('lev-ad').value,lr=document.getElementById('lev-return').value;
+  const sc={price:lp===''?s.price:+lp,units:s.units,returnPct:lr===''?s.returnPct:+lr,allInCost:s.allInCost,feesPct:s.feesPct,adSpend:la===''?s.adSpend:+la};
+  const bc=computeSku(s),scc=computeSku(sc);
+  document.getElementById('b-rev').textContent=fmtUsd(bc.netRev);document.getElementById('b-cmp').textContent=fmtPct(bc.cmPct);document.getElementById('b-cm').textContent=fmtUsd(bc.cm);
+  document.getElementById('s-rev').textContent=fmtUsd(scc.netRev);document.getElementById('s-cmp').textContent=fmtPct(scc.cmPct);document.getElementById('s-cm').textContent=fmtUsd(scc.cm);
+  ['dec-base','dec-scenario'].forEach((id,i)=>{const d=i===0?bc:scc;document.getElementById(id).textContent=d.decision||'—';document.getElementById(id).className='decision-pill '+(d.decision||'');});
+  const d=scc.cm-bc.cm,noL=lp===''&&la===''&&lr==='';
+  const av=document.getElementById('annual-val');av.textContent=noL?'—':fmtUsdSigned(d*12);av.className='value '+(noL?'neutral':d>1?'positive':d<-1?'negative':'neutral');
+  const ins=document.getElementById('insight');
+  if(noL){ins.textContent='Type a value in any lever to simulate.';}
+  else if(Math.abs(d)<1){ins.textContent='Neutral — scenario CM is essentially the same as base.';}
+  else{const ds=bc.decision===scc.decision?`${bc.decision} (unchanged)`:`${bc.decision} → ${scc.decision}`;ins.textContent=`Monthly CM ${fmtUsd(bc.cm)} → ${fmtUsd(scc.cm)}  (${fmtUsdSigned(d)}/mo, ${fmtUsdSigned(d*12)}/yr).  CM% ${fmtPct(bc.cmPct)} → ${fmtPct(scc.cmPct)}.  Decision: ${ds}.`;}
+}
+
+function resetLever(id){document.getElementById(id).value='';renderScenario();}
+
+// ================================================================
+// CRUD
+// ================================================================
+function addRow(){skus.push({id:nextId++,sku:'',channel:'Shopify',price:0,units:0,returnPct:0,allInCost:0,feesPct:6,adSpend:0});renderAll();}
+function deleteRow(id){skus=skus.filter(s=>s.id!==id);renderAll();}
+
+function updateField(id,field,value){
+  const s=skus.find(x=>x.id===id);if(!s)return;
+  if(field==='sku'||field==='channel')s[field]=value;else s[field]=value===''?0:+value;
+  const c=computeSku(s);
+  const cmEl=document.getElementById(`cm-${id}`),cmpEl=document.getElementById(`cmp-${id}`),decEl=document.getElementById(`dec-${id}`);
+  if(cmEl){cmEl.className='cell-computed'+(c.cm<0?' negative':'');cmEl.textContent=fmtUsd(c.cm);}
+  if(cmpEl){cmpEl.className='cell-computed'+(c.cm<0?' negative':'');cmpEl.textContent=fmtPct(c.cmPct);}
+  if(decEl){decEl.innerHTML=c.decision?`<span class="decision-pill ${c.decision}">${c.decision}</span>`:'—';}
+  renderSummary();
+  if(field==='sku')renderScenarioOptions();else renderScenario();
+}
+
+function loadSample(){skus=SAMPLE.map(s=>({id:nextId++,...s}));renderAll();}
+function renderAll(){renderTable();renderSummary();renderScenarioOptions();}
+
+// ================================================================
+// EMAIL GATE
+// ================================================================
+function openEmailGate(){
+  const sum=window._lastSummary;
+  if(!sum||!sum.computed.length)return;
+
+  // Populate summary card
+  document.getElementById('ms-status').textContent=sum.status.toUpperCase();
+  document.getElementById('ms-profit').textContent=fmtUsd(sum.totalCm)+'/mo  ('+fmtUsd(sum.totalCm*12)+'/yr)';
+  document.getElementById('ms-cm').textContent=sum.totalRev>0?fmtPct(sum.blended):'—';
+  document.getElementById('ms-decisions').textContent=`${sum.counts.SCALE} SCALE · ${sum.counts.OPTIMIZE} OPTIM · ${sum.counts.REVIEW} REVIEW · ${sum.counts.KILL} KILL`;
+
+  const kills=sum.computed.filter(x=>x.c.decision==='KILL');
+  const swingEl=document.getElementById('ms-swing');
+  if(kills.length){
+    const bleed=kills.reduce((a,x)=>a+x.c.cm,0);
+    swingEl.textContent=`⚠  Kill ${kills.length===1?'the 1 bleeder':'the '+kills.length+' bleeders'} → swing of $${Math.round(-bleed*12).toLocaleString()}/yr`;
+    swingEl.className='ms-swing';
+  } else {
+    swingEl.textContent='✓  No bleeders. Portfolio is clean.';
+    swingEl.className='ms-swing clean';
+  }
+
+  // Personalise Clarim CTA copy based on KILL count
+  if(kills.length){
+    const w=kills.sort((a,b)=>a.c.cm-b.c.cm)[0];
+    document.getElementById('co-body-text').textContent=`Your biggest bleeder (${w.s.sku}) costs $${Math.round(-w.c.cm).toLocaleString()}/mo to run. Clarim finds these automatically every month — Shopify sync, no manual entry, PDF memo included. Skip the spreadsheet next time.`;
+  }
+
+  document.getElementById('modal-step-1').style.display='';
+  document.getElementById('modal-step-2').style.display='none';
+  document.getElementById('gate-email').value='';
+  document.getElementById('gate-submit').disabled=false;
+  document.getElementById('gate-submit').textContent='Save →';
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('gate-email').focus(),100);
+}
+
+async function submitEmailGate(){
+  const email=document.getElementById('gate-email').value.trim();
+  if(!email||!email.includes('@')){document.getElementById('gate-email').focus();return;}
+
+  const btn=document.getElementById('gate-submit');
+  btn.disabled=true; btn.textContent='Saving…';
+
+  const sum=window._lastSummary||{};
+  const kills=(sum.computed||[]).filter(x=>x.c.decision==='KILL').sort((a,b)=>a.c.cm-b.c.cm);
+  const scales=(sum.computed||[]).filter(x=>x.c.decision==='SCALE').sort((a,b)=>b.c.cm-a.c.cm);
+
+  const payload={
+    email,
+    timestamp:new Date().toISOString(),
+    source:'profit-truth-sheet',
+    summary:{
+      status:sum.status,
+      totalCm:Math.round(sum.totalCm||0),
+      annualCm:Math.round((sum.totalCm||0)*12),
+      blendedPct:+(sum.blended||0).toFixed(4),
+      skuCount:(sum.computed||[]).length,
+    },
+    decisions:{...(sum.counts||{})},
+    topKill:kills.length?{sku:kills[0].s.sku,channel:kills[0].s.channel,monthlyBleed:Math.round(kills[0].c.cm)}:null,
+    topScale:scales.length?{sku:scales[0].s.sku,channel:scales[0].s.channel,monthlyCm:Math.round(scales[0].c.cm)}:null,
+    skus:skus.map(s=>({...s})),
+  };
+
+  try {
+    // Fire and forget — don't block UX on backend response
+    fetch(CONFIG.EMAIL_ENDPOINT,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload),
+    }).catch(()=>{}); // intentional silent fail
+  } catch(e){}
+
+  // Always advance to step 2 — never let a backend error kill the conversion
+  document.getElementById('saved-email-display').textContent=email;
+  document.getElementById('modal-step-1').style.display='none';
+  document.getElementById('modal-step-2').style.display='';
+  document.querySelector('.co-btn').href=CONFIG.TRIAL_URL+'?email='+encodeURIComponent(email);
+
+  // Save to localStorage so returning visitor is recognised
+  try{localStorage.setItem('pts_email',email);localStorage.setItem('pts_saved',new Date().toISOString());}catch(e){}
+}
+
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+function maybeCloseModal(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+document.getElementById('gate-email').addEventListener('keydown',e=>{if(e.key==='Enter')submitEmailGate();});
+
+// ================================================================
+// THRESHOLDS
+// ================================================================
+function updateThresholds(){
+  THR.scale  =(+(document.getElementById('thr-scale').value)||30)/100;
+  THR.optimize=(+(document.getElementById('thr-optimize').value)||15)/100;
+  THR.review  =(+(document.getElementById('thr-review').value)||5)/100;
+  try{localStorage.setItem('cm_thresholds',JSON.stringify(THR));}catch(e){}
+  renderTable();renderSummary();renderScenario();
+}
+function resetThresholds(){document.getElementById('thr-scale').value=30;document.getElementById('thr-optimize').value=15;document.getElementById('thr-review').value=5;updateThresholds();}
+function loadThresholds(){try{const t=JSON.parse(localStorage.getItem('cm_thresholds')||'null');if(t&&isFinite(t.scale)){THR.scale=t.scale;THR.optimize=t.optimize;THR.review=t.review;document.getElementById('thr-scale').value=Math.round(t.scale*100);document.getElementById('thr-optimize').value=Math.round(t.optimize*100);document.getElementById('thr-review').value=Math.round(t.review*100);}}catch(e){}}
+
+// ================================================================
+// IMPORT
+// ================================================================
+function handleFileUpload(event){
+  const file=event.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=e=>{try{const d=new Uint8Array(e.target.result);const wb=XLSX.read(d,{type:'array'});const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true});importRows(rows);}catch(err){alert('Import failed: '+err.message);}};
+  r.readAsArrayBuffer(file);event.target.value='';
+}
+function importRows(rows){
+  let hi=-1;
+  for(let i=0;i<Math.min(rows.length,15);i++){const r=(rows[i]||[]).map(c=>String(c||'').toLowerCase());if(r.some(c=>c.includes('sku'))&&r.some(c=>c.includes('price'))){hi=i;break;}}
+  if(hi===-1){alert('Could not find a header row with "SKU" and "Price" columns.');return;}
+  const h=rows[hi].map(c=>String(c||'').toLowerCase().trim());
+  const col=(...k)=>h.findIndex(x=>k.some(kk=>x.includes(kk)));
+  const iS=col('sku'),iC=col('channel'),iP=col('price'),iU=col('units','qty','sold'),iR=col('return'),iCo=col('cost','cogs','landed'),iF=col('fee'),iA=col('ad spend','ads','ad$','ad ');
+  const imp=[];
+  for(let i=hi+1;i<rows.length;i++){const r=rows[i]||[];const nm=String(r[iS]||'').trim();if(!nm)continue;const ret=+r[iR]||0,fees=+r[iF]||0;imp.push({id:nextId++,sku:nm,channel:String(r[iC]||'Shopify').trim()||'Shopify',price:+r[iP]||0,units:+r[iU]||0,returnPct:ret>0&&ret<1?ret*100:ret,allInCost:+r[iCo]||0,feesPct:fees>0&&fees<1?fees*100:fees,adSpend:+r[iA]||0});}
+  if(!imp.length){alert('No data rows found.');return;}
+  skus=imp;renderAll();
+}
+
+// ================================================================
+// SNAPSHOTS
+// ================================================================
+const SNAP_KEY='cm_snapshots_v1';
+const loadSnaps=()=>{try{return JSON.parse(localStorage.getItem(SNAP_KEY)||'[]');}catch(e){return[];}};
+const writeSnaps=a=>{try{localStorage.setItem(SNAP_KEY,JSON.stringify(a));return true;}catch(e){return false;}};
+function saveSnapshot(){
+  const comp=skus.map(s=>({s,c:computeSku(s)})).filter(x=>x.s.sku&&x.c.decision);
+  if(!comp.length){alert('Add some SKUs first.');return;}
+  const tc=comp.reduce((a,x)=>a+x.c.cm,0),tr=comp.reduce((a,x)=>a+x.c.netRev,0);
+  const cnt={SCALE:0,OPTIMIZE:0,REVIEW:0,KILL:0};comp.forEach(x=>{if(cnt[x.c.decision]!==undefined)cnt[x.c.decision]++;});
+  const all=loadSnaps();all.push({id:Date.now(),date:new Date().toISOString().slice(0,10),totalCm:tc,totalRev:tr,blendedPct:tr>0?tc/tr:0,counts:cnt,skuCount:comp.length});
+  if(!writeSnaps(all))document.getElementById('snapshot-warn').innerHTML='<div style="padding:10px 20px;background:var(--kill-bg);color:var(--kill);font-size:11px;font-family:var(--mono)">⚠ Browser storage blocked — snapshots won\'t persist.</div>';
+  renderSnapshots();
+}
+function deleteSnapshot(id){writeSnaps(loadSnaps().filter(x=>x.id!==id));renderSnapshots();}
+function renderSnapshots(){
+  const all=loadSnaps().sort((a,b)=>a.id-b.id);
+  const list=document.getElementById('snapshot-list');
+  if(!all.length){list.innerHTML='<div class="snap-empty">No snapshots yet. Click <strong>+ Save snapshot</strong> to record the current portfolio state.</div>';return;}
+  const head=`<div class="snap-row head"><div>Date</div><div>CM $/mo</div><div>Annual</div><div>Blended CM%</div><div>Heatmap (S/O/R/K)</div><div>Δ vs prev</div><div></div></div>`;
+  const rows=all.map((s,i)=>{const prev=i>0?all[i-1]:null;const d=prev?s.totalCm-prev.totalCm:null;const delta=d===null?'—':fmtUsdSigned(d)+'/mo';const dc=d===null?'':(d>1?'positive':d<-1?'negative':'');return`<div class="snap-row"><div>${s.date}</div><div class="snap-cm${s.totalCm<0?' negative':''}">${fmtUsd(s.totalCm)}</div><div>${fmtUsd(s.totalCm*12)}</div><div>${fmtPct(s.blendedPct)}</div><div class="snap-heat"><span class="s">${s.counts.SCALE}</span><span class="o">${s.counts.OPTIMIZE}</span><span class="r">${s.counts.REVIEW}</span><span class="k">${s.counts.KILL}</span></div><div class="snap-delta ${dc}">${delta}</div><div><button class="row-delete" onclick="deleteSnapshot(${s.id})" title="Delete">✕</button></div></div>`;}).join('');
+  list.innerHTML=head+rows;
+}
+
+// ================================================================
+// INIT
+// ================================================================
+loadThresholds();
+loadSample();
+renderSnapshots();
+</script>
+</body>
+</html>
