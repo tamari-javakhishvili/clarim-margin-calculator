@@ -566,7 +566,7 @@
 const CONFIG = {
   // Your API endpoint. See DEPLOY.md for how to build it.
   // Fallback: swap this for a Formspree URL (see DEPLOY.md section 3)
-  EMAIL_ENDPOINT: 'https://formspree.io/f/mkoklqla',
+  EMAIL_ENDPOINT: 'https://api.web3forms.com/submit',
 
   // Clarim trial URL (used in post-submit offer)
   TRIAL_URL: 'https://clarim.io/signup',
@@ -855,10 +855,13 @@ async function submitEmailGate(){
   const kills=(sum.computed||[]).filter(x=>x.c.decision==='KILL').sort((a,b)=>a.c.cm-b.c.cm);
   const scales=(sum.computed||[]).filter(x=>x.c.decision==='SCALE').sort((a,b)=>b.c.cm-a.c.cm);
 
-  const payload={
-    email,
-    timestamp:new Date().toISOString(),
-    source:'profit-truth-sheet',
+     const payload={
+          access_key: '9e9317b3-df19-40f3-b153-014347006cd2',
+          subject: 'New Profit Truth Sheet submission',
+          from_name: 'Clarim Calculator',
+          email,
+          timestamp:new Date().toISOString(),
+          source:'profit-truth-sheet',
     summary:{
       status:sum.status,
       totalCm:Math.round(sum.totalCm||0),
