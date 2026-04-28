@@ -777,13 +777,14 @@ function updateField(id,field,value){
     renderAll();
     return;
   }
-  if(field==='sku'||field==='channel')s[field]=value;else s[field]=value===''?0:+value;  const c=computeSku(s);
- const cmEl=document.getElementById(`cm-${id}`),cmpEl=document.getElementById(`cmp-${id}`),decEl=document.getElementById(`dec-${id}`);
- if(cmEl){cmEl.className='cell-computed'+(c.cm<0?' negative':'');cmEl.textContent=fmtUsd(c.cm);}
- if(cmpEl){cmpEl.className='cell-computed'+(c.cm<0?' negative':'');cmpEl.textContent=fmtPct(c.cmPct);}
- if(decEl){decEl.innerHTML=c.decision?`<span class="decision-pill ${c.decision}">${c.decision}</span>`:'—';}
- renderSummary();
- if(field==='sku')renderScenarioOptions();else renderScenario();
+  if(field==='sku'||field==='channel')s[field]=value;else s[field]=value===''?0:+value;
+  const c=computeSku(s);
+  const cmEl=document.getElementById(`cm-${id}`),cmpEl=document.getElementById(`cmp-${id}`),decEl=document.getElementById(`dec-${id}`);
+  if(cmEl){cmEl.className='cell-computed'+(c.cm<0?' negative':'');cmEl.textContent=fmtUsd(c.cm);}
+  if(cmpEl){cmpEl.className='cell-computed'+(c.cm<0?' negative':'');cmpEl.textContent=fmtPct(c.cmPct);}
+  if(decEl){decEl.innerHTML=c.decision?`<span class="decision-pill ${c.decision}">${c.decision}</span>`:'—';}
+  renderSummary();
+  if(field==='sku')renderScenarioOptions();else renderScenario();
 }
 
 function loadSample(){skus=SAMPLE.map(s=>({id:nextId++,...s}));renderAll();}
@@ -839,7 +840,7 @@ async function submitEmailGate(){
       const hoursSince = (Date.now() - new Date(lastSaved).getTime()) / (1000*60*60);
       if(hoursSince < 24){
         const hoursLeft = Math.ceil(24 - hoursSince);
-        alert('Free web version: 1 analysis per 24 hours.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLef.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLeft + 'h.\n\nFor unlimited analysis any time, get the Profit Truth Sheet ($39) — Excel + benchmarks PDF, runs offline, no limits.\n\n[GUMROAD_URL]');
+       alert('Free web version: 1 analysis per 24 hours.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLeft + 'h.\n\nFor unlimited analysis any time, get the Profit Truth Sheet ($39) — Excel + benchmarks PDF, runs offline, no limits.\n\n[GUMROAD_URL]');
         document.getElementById('gate-submit').disabled=false;
         document.getElementById('gate-submit').textContent='Save →';
         return;
