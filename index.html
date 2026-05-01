@@ -769,7 +769,7 @@ function resetLever(id){document.getElementById(id).value='';renderScenario();}
 // ================================================================
 function addRow(){
   if(skus.length>=5){
-    alert('Free version is limited to 5 SKUs.\n\nThe full Profit Truth Sheet handles unlimited SKUs across all channels — Excel template + 12-category benchmarks PDF + multi-channel support.\n\nGet it for $39: [GUMROAD_URL]');
+    alert('Free version is limited to 5 SKUs.\n\nThe full Profit Truth Sheet handles unlimited SKUs across all channels — Excel template + 12-category benchmarks PDF + multi-channel support.\n\nGet it for $39: https://tamarj.gumroad.com/l/profit-truth-sheet');
     return;
   }
   skus.push({id:nextId++,sku:'',channel:'Shopify',price:0,units:0,returnPct:0,allInCost:0,feesPct:6,adSpend:0});
@@ -780,7 +780,7 @@ function deleteRow(id){skus=skus.filter(s=>s.id!==id);renderAll();}
 function updateField(id,field,value){
   const s=skus.find(x=>x.id===id);if(!s)return;
   if(field==='channel' && value.includes('🔒')){
-    alert('Multi-channel support (TikTok, Walmart, Wholesale, Etsy, eBay) is part of the full Profit Truth Sheet — $39 on Gumroad.\n\nFor now, choose Shopify or Amazon.\n\n[GUMROAD_URL]');
+    alert('Multi-channel support (TikTok, Walmart, Wholesale, Etsy, eBay) is part of the full Profit Truth Sheet — $39 on Gumroad.\n\nFor now, choose Shopify or Amazon.\n\nhttps://tamarj.gumroad.com/l/profit-truth-sheet');
     s[field]='Shopify';
     renderAll();
     return;
@@ -848,7 +848,7 @@ async function submitEmailGate(){
       const hoursSince = (Date.now() - new Date(lastSaved).getTime()) / (1000*60*60);
       if(hoursSince < 24){
         const hoursLeft = Math.ceil(24 - hoursSince);
-       alert('Free web version: 1 analysis per 24 hours.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLeft + 'h.\n\nFor unlimited analysis any time, get the Profit Truth Sheet ($39) — Excel + benchmarks PDF, runs offline, no limits.\n\n[GUMROAD_URL]');
+       alert('Free web version: 1 analysis per 24 hours.\n\nYou used it ' + Math.floor(hoursSince) + 'h ago. Try again in ' + hoursLeft + 'h.\n\nFor unlimited analysis any time, get the Profit Truth Sheet ($39) — Excel + benchmarks PDF, runs offline, no limits.\n\nhttps://tamarj.gumroad.com/l/profit-truth-sheet');
         document.getElementById('gate-submit').disabled=false;
         document.getElementById('gate-submit').textContent='Save →';
         return;
